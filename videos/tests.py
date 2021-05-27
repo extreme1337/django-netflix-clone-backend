@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import Video
+from .models import Video, PublishStateOptions
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -7,7 +7,7 @@ from django.utils.text import slugify
 class VideoModelTestCase(TestCase):
     def setUp(self):
         self.obj_a = Video.objects.create(title='This is my title', video_id='abc')
-        self.obj_b = Video.objects.create(title='This is my title', video_id='abd', state=Video.VideoStateOptions.PUBLISH)
+        self.obj_b = Video.objects.create(title='This is my title', video_id='abd', state=PublishStateOptions.PUBLISH)
 
     def test_valid_title(self):
         title = 'This is my title'
@@ -19,13 +19,13 @@ class VideoModelTestCase(TestCase):
         self.assertEqual(qs.count(), 2)
 
     def test_draft_case(self):
-        qs = Video.objects.filter(state=Video.VideoStateOptions.DRAFT)
+        qs = Video.objects.filter(state=PublishStateOptions.DRAFT)
         self.assertEqual(qs.count(), 1)
 
     def test_publish_case(self):
-        qs = Video.objects.filter(state=Video.VideoStateOptions.PUBLISH)
+        qs = Video.objects.filter(state=PublishStateOptions.PUBLISH)
         now = timezone.now()
-        published_qs = Video.objects.filter(state=Video.VideoStateOptions.PUBLISH, publish_timestamp__lte = now)
+        published_qs = Video.objects.filter(state=PublishStateOptions.PUBLISH, publish_timestamp__lte = now)
         self.assertTrue(published_qs.exists())
 
     def test_slug_field(self):
