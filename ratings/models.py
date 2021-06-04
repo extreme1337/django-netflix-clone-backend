@@ -24,4 +24,3 @@ class Rating(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
-Rating.objects.aggregate(average=Avg("value"))
