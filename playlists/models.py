@@ -22,6 +22,23 @@ class PlaylistQuerySet(models.QuerySet):
             publish_timestamp__lte= now 
         )
 
+    def search(self, query=None):
+        if query is None:
+            return self
+        return self.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__title__icontains=query) |
+            Q(category__slug__icontains=query) |
+            Q(tags__tag__icontains=query)
+        )
+
+    def movie_or_show(self):
+        return self.filter(
+            Q(type=Playlist.PlaylistTypeChoices.MOVIE) | 
+            Q(type=Playlist.PlaylistTypeChoices.SHOW)
+        )
+
 class PlaylistManager(models.Manager):
     def get_queryset(self):
         return PlaylistQuerySet(self.model, using=self._db)
@@ -59,6 +76,30 @@ class Playlist(models.Model):
     
     def __str__(self):
         return self.title
+
+    def get_related_items(self):
+        return self.playlistrelated_set.all()
+
+    def get_absolute_url(self):
+        if self.is_movie:
+            return f"/movies/{self.slug}"
+        if self.is_show:
+            return f"/shows/{self.slug}"
+        if self.is_season and self.parent is not None:
+            return f"/shows/{self.slug}/seasons/{self.slug}/"
+        return f"/playlists/{self.slug}"
+
+    @property
+    def is_season(self):
+        return self.type == self.PlaylistTypeChoices.SEASON
+
+    @property
+    def is_movie(self):
+        return self.type == self.PlaylistTypeChoices.MOVIE
+
+    @property
+    def is_show(self):
+        return self.type == self.PlaylistTypeChoices.SHOW
 
     def get_rating_avg(self):
         return Playlist.objects.filter(id=self.id).aggregate(Avg("ratings__value"))
